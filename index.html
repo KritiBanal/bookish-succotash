@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Books & Movies</title>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --surface2: #f1f3f5;
+    --border: #dee2e6;
+    --text: #212529;
+    --text2: #6c757d;
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --danger: #ef4444;
+    --star: #f59e0b;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --radius: 10px;
+  }
+  .dark {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #273449;
+    --border: #334155;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.2s, color 0.2s; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+  header h1 { font-size: 1.3rem; font-weight: 700; padding: 1rem 0; }
+  header h1 span { color: var(--primary); }
+  .dark-toggle { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; cursor: pointer; color: var(--text); font-size: 0.85rem; transition: background 0.15s; }
+  .dark-toggle:hover { background: var(--surface2); }
+  nav { display: flex; gap: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; overflow-x: auto; }
+  nav button { background: none; border: none; border-bottom: 3px solid transparent; padding: 0.9rem 1.2rem; cursor: pointer; color: var(--text2); font-size: 0.95rem; font-weight: 500; white-space: nowrap; transition: color 0.15s, border-color 0.15s; }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab { display: none; padding: 1.5rem; max-width: 1000px; margin: 0 auto; }
+  .tab.active { display: block; }
+  .add-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+  .add-form h2 { font-size: 1rem; margin-bottom: 1rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 0.8rem; color: var(--text2); font-weight: 500; }
+  .form-group input, .form-group select, .form-group textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 0.9rem; outline: none; transition: border-color 0.15s; font-family: inherit; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+  .form-group textarea { resize: vertical; min-height: 60px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .star-input { display: flex; gap: 4px; }
+  .star-input span { font-size: 1.4rem; cursor: pointer; color: var(--border); transition: color 0.1s; }
+  .star-input span.active, .star-input span:hover { color: var(--star); }
+  .btn { background: var(--primary); color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.15s; }
+  .btn:hover { background: var(--primary-hover); }
+  .btn-row { margin-top: 1rem; display: flex; gap: 0.5rem; }
+  .search-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; gap: 0.75rem; align-items: center; box-shadow: var(--shadow); }
+  .search-bar input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 0.9rem; outline: none; }
+  .search-bar select { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 0.9rem; outline: none; }
+  .count { font-size: 0.85rem; color: var(--text2); margin-left: auto; white-space: nowrap; }
+  .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .item-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem; box-shadow: var(--shadow); position: relative; }
+  .item-card .title { font-weight: 700; font-size: 1rem; margin-bottom: 2px; padding-right: 1.5rem; }
+  .item-card .creator { color: var(--text2); font-size: 0.85rem; margin-bottom: 6px; }
+  .item-card .stars { color: var(--star); font-size: 1rem; margin-bottom: 6px; }
+  .item-card .meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 6px; }
+  .badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 0.75rem; color: var(--text2); }
+  .item-card .notes { font-size: 0.83rem; color: var(--text2); margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px; }
+  .delete-btn { position: absolute; top: 0.75rem; right: 0.75rem; background: none; border: none; color: var(--text2); cursor: pointer; font-size: 1rem; opacity: 0.5; transition: opacity 0.15s, color 0.15s; }
+  .delete-btn:hover { opacity: 1; color: var(--danger); }
+  .empty { text-align: center; padding: 3rem; color: var(--text2); }
+  .empty p { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .empty small { font-size: 0.85rem; }
+  .rec-section { margin-bottom: 2rem; }
+  .rec-section h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); }
+  .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
+  .rec-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); }
+  .rec-card .rec-title { font-weight: 700; font-size: 0.95rem; }
+  .rec-card .rec-creator { color: var(--text2); font-size: 0.82rem; margin-bottom: 6px; }
+  .rec-card .rec-reason { font-size: 0.8rem; color: var(--primary); margin-top: 6px; }
+  .rec-empty { color: var(--text2); font-size: 0.9rem; padding: 1rem; background: var(--surface); border-radius: var(--radius); border: 1px dashed var(--border); }
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .items-grid { grid-template-columns: 1fr; }
+    header h1 { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>My <span>Books</span> & <span>Movies</span></h1>
+  <button class="dark-toggle" onclick="toggleDark()">🌙 Dark</button>
+</header>
+<nav>
+  <button class="active" onclick="switchTab('books', this)">📚 Books</button>
+  <button onclick="switchTab('movies', this)">🎬 Movies</button>
+  <button onclick="switchTab('recs', this)">✨ Recommendations</button>
+</nav>
+
+<!-- BOOKS TAB -->
+<div id="tab-books" class="tab active">
+  <div class="add-form">
+    <h2>Add a Book</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Title *</label>
+        <input id="b-title" type="text" placeholder="Book title">
+      </div>
+      <div class="form-group">
+        <label>Author *</label>
+        <input id="b-author" type="text" placeholder="Author name">
+      </div>
+      <div class="form-group">
+        <label>Genre</label>
+        <select id="b-genre">
+          <option value="">Select genre</option>
+          <option>Fiction</option><option>Non-fiction</option><option>Mystery</option>
+          <option>Sci-Fi</option><option>Fantasy</option><option>Romance</option>
+          <option>Thriller</option><option>Biography</option><option>History</option>
+          <option>Self-Help</option><option>Horror</option><option>Literary Fiction</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date Read</label>
+        <input id="b-date" type="date">
+      </div>
+      <div class="form-group">
+        <label>Your Rating</label>
+        <div class="star-input" id="b-stars" data-val="0">
+          <span onclick="setStars('b-stars',1)">★</span>
+          <span onclick="setStars('b-stars',2)">★</span>
+          <span onclick="setStars('b-stars',3)">★</span>
+          <span onclick="setStars('b-stars',4)">★</span>
+          <span onclick="setStars('b-stars',5)">★</span>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label>Notes</label>
+        <textarea id="b-notes" placeholder="Your thoughts..."></textarea>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn" onclick="addBook()">Add Book</button></div>
+  </div>
+  <div class="search-bar">
+    <input id="b-search" type="text" placeholder="Search books..." oninput="renderBooks()">
+    <select id="b-filter-genre" onchange="renderBooks()">
+      <option value="">All genres</option>
+      <option>Fiction</option><option>Non-fiction</option><option>Mystery</option>
+      <option>Sci-Fi</option><option>Fantasy</option><option>Romance</option>
+      <option>Thriller</option><option>Biography</option><option>History</option>
+      <option>Self-Help</option><option>Horror</option><option>Literary Fiction</option>
+    </select>
+    <select id="b-sort" onchange="renderBooks()">
+      <option value="newest">Newest</option>
+      <option value="rating">Top Rated</option>
+      <option value="title">A–Z</option>
+    </select>
+    <span class="count" id="b-count"></span>
+  </div>
+  <div class="items-grid" id="books-list"></div>
+</div>
+
+<!-- MOVIES TAB -->
+<div id="tab-movies" class="tab">
+  <div class="add-form">
+    <h2>Add a Movie</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Title *</label>
+        <input id="m-title" type="text" placeholder="Movie title">
+      </div>
+      <div class="form-group">
+        <label>Director</label>
+        <input id="m-director" type="text" placeholder="Director name">
+      </div>
+      <div class="form-group">
+        <label>Genre</label>
+        <select id="m-genre">
+          <option value="">Select genre</option>
+          <option>Action</option><option>Comedy</option><option>Drama</option>
+          <option>Horror</option><option>Sci-Fi</option><option>Thriller</option>
+          <option>Romance</option><option>Animation</option><option>Documentary</option>
+          <option>Fantasy</option><option>Mystery</option><option>Crime</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date Watched</label>
+        <input id="m-date" type="date">
+      </div>
+      <div class="form-group">
+        <label>Your Rating</label>
+        <div class="star-input" id="m-stars" data-val="0">
+          <span onclick="setStars('m-stars',1)">★</span>
+          <span onclick="setStars('m-stars',2)">★</span>
+          <span onclick="setStars('m-stars',3)">★</span>
+          <span onclick="setStars('m-stars',4)">★</span>
+          <span onclick="setStars('m-stars',5)">★</span>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label>Notes</label>
+        <textarea id="m-notes" placeholder="Your thoughts..."></textarea>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn" onclick="addMovie()">Add Movie</button></div>
+  </div>
+  <div class="search-bar">
+    <input id="m-search" type="text" placeholder="Search movies..." oninput="renderMovies()">
+    <select id="m-filter-genre" onchange="renderMovies()">
+      <option value="">All genres</option>
+      <option>Action</option><option>Comedy</option><option>Drama</option>
+      <option>Horror</option><option>Sci-Fi</option><option>Thriller</option>
+      <option>Romance</option><option>Animation</option><option>Documentary</option>
+      <option>Fantasy</option><option>Mystery</option><option>Crime</option>
+    </select>
+    <select id="m-sort" onchange="renderMovies()">
+      <option value="newest">Newest</option>
+      <option value="rating">Top Rated</option>
+      <option value="title">A–Z</option>
+    </select>
+    <span class="count" id="m-count"></span>
+  </div>
+  <div class="items-grid" id="movies-list"></div>
+</div>
+
+<!-- RECOMMENDATIONS TAB -->
+<div id="tab-recs" class="tab">
+  <div class="rec-section">
+    <h2>📚 Book Recommendations</h2>
+    <div id="book-recs"></div>
+  </div>
+  <div class="rec-section">
+    <h2>🎬 Movie Recommendations</h2>
+    <div id="movie-recs"></div>
+  </div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+let books = JSON.parse(localStorage.getItem('mybooks') || '[]');
+let movies = JSON.parse(localStorage.getItem('mymovies') || '[]');
+let dark = JSON.parse(localStorage.getItem('darkmode') || 'false');
+
+if (dark) document.body.classList.add('dark');
+
+function save() {
+  localStorage.setItem('mybooks', JSON.stringify(books));
+  localStorage.setItem('mymovies', JSON.stringify(movies));
+}
+
+// ── Stars ─────────────────────────────────────────────────────────────────────
+function setStars(id, val) {
+  const el = document.getElementById(id);
+  el.dataset.val = val;
+  [...el.children].forEach((s, i) => s.classList.toggle('active', i < val));
+}
+function getStars(id) { return parseInt(document.getElementById(id).dataset.val) || 0; }
+function resetStars(id) { setStars(id, 0); }
+function starsHtml(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+// ── Books ─────────────────────────────────────────────────────────────────────
+function addBook() {
+  const title = document.getElementById('b-title').value.trim();
+  const author = document.getElementById('b-author').value.trim();
+  if (!title) { alert('Please enter a title.'); return; }
+  books.unshift({
+    id: Date.now(), title, author,
+    genre: document.getElementById('b-genre').value,
+    date: document.getElementById('b-date').value,
+    rating: getStars('b-stars'),
+    notes: document.getElementById('b-notes').value.trim(),
+  });
+  save();
+  ['b-title','b-author','b-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('b-genre').value = '';
+  document.getElementById('b-date').value = '';
+  resetStars('b-stars');
+  renderBooks();
+  renderRecs();
+}
+
+function deleteBook(id) {
+  books = books.filter(b => b.id !== id);
+  save(); renderBooks(); renderRecs();
+}
+
+function renderBooks() {
+  const q = document.getElementById('b-search').value.toLowerCase();
+  const genre = document.getElementById('b-filter-genre').value;
+  const sort = document.getElementById('b-sort').value;
+  let list = books.filter(b =>
+    (!q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)) &&
+    (!genre || b.genre === genre)
+  );
+  if (sort === 'rating') list.sort((a,b) => b.rating - a.rating);
+  else if (sort === 'title') list.sort((a,b) => a.title.localeCompare(b.title));
+  document.getElementById('b-count').textContent = `${list.length} book${list.length!==1?'s':''}`;
+  const el = document.getElementById('books-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty" style="grid-column:1/-1"><p>${books.length?'No matches found.':'No books yet!'}</p><small>${books.length?'Try a different search.':'Add your first book above.'}</small></div>`;
+    return;
+  }
+  el.innerHTML = list.map(b => `
+    <div class="item-card">
+      <button class="delete-btn" onclick="deleteBook(${b.id})">✕</button>
+      <div class="title">${esc(b.title)}</div>
+      <div class="creator">${esc(b.author)}</div>
+      <div class="stars">${starsHtml(b.rating)}</div>
+      <div class="meta">
+        ${b.genre ? `<span class="badge">${esc(b.genre)}</span>` : ''}
+        ${b.date ? `<span class="badge">${b.date}</span>` : ''}
+      </div>
+      ${b.notes ? `<div class="notes">${esc(b.notes)}</div>` : ''}
+    </div>`).join('');
+}
+
+// ── Movies ────────────────────────────────────────────────────────────────────
+function addMovie() {
+  const title = document.getElementById('m-title').value.trim();
+  if (!title) { alert('Please enter a title.'); return; }
+  movies.unshift({
+    id: Date.now(), title,
+    director: document.getElementById('m-director').value.trim(),
+    genre: document.getElementById('m-genre').value,
+    date: document.getElementById('m-date').value,
+    rating: getStars('m-stars'),
+    notes: document.getElementById('m-notes').value.trim(),
+  });
+  save();
+  ['m-title','m-director','m-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('m-genre').value = '';
+  document.getElementById('m-date').value = '';
+  resetStars('m-stars');
+  renderMovies();
+  renderRecs();
+}
+
+function deleteMovie(id) {
+  movies = movies.filter(m => m.id !== id);
+  save(); renderMovies(); renderRecs();
+}
+
+function renderMovies() {
+  const q = document.getElementById('m-search').value.toLowerCase();
+  const genre = document.getElementById('m-filter-genre').value;
+  const sort = document.getElementById('m-sort').value;
+  let list = movies.filter(m =>
+    (!q || m.title.toLowerCase().includes(q) || m.director.toLowerCase().includes(q)) &&
+    (!genre || m.genre === genre)
+  );
+  if (sort === 'rating') list.sort((a,b) => b.rating - a.rating);
+  else if (sort === 'title') list.sort((a,b) => a.title.localeCompare(b.title));
+  document.getElementById('m-count').textContent = `${list.length} movie${list.length!==1?'s':''}`;
+  const el = document.getElementById('movies-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty" style="grid-column:1/-1"><p>${movies.length?'No matches found.':'No movies yet!'}</p><small>${movies.length?'Try a different search.':'Add your first movie above.'}</small></div>`;
+    return;
+  }
+  el.innerHTML = list.map(m => `
+    <div class="item-card">
+      <button class="delete-btn" onclick="deleteMovie(${m.id})">✕</button>
+      <div class="title">${esc(m.title)}</div>
+      <div class="creator">${esc(m.director)}</div>
+      <div class="stars">${starsHtml(m.rating)}</div>
+      <div class="meta">
+        ${m.genre ? `<span class="badge">${esc(m.genre)}</span>` : ''}
+        ${m.date ? `<span class="badge">${m.date}</span>` : ''}
+      </div>
+      ${m.notes ? `<div class="notes">${esc(m.notes)}</div>` : ''}
+    </div>`).join('');
+}
+
+// ── Recommendations ───────────────────────────────────────────────────────────
+const BOOK_DB = [
+  {title:'Dune',creator:'Frank Herbert',genre:'Sci-Fi'},
+  {title:'The Hitchhiker\'s Guide to the Galaxy',creator:'Douglas Adams',genre:'Sci-Fi'},
+  {title:'Ender\'s Game',creator:'Orson Scott Card',genre:'Sci-Fi'},
+  {title:'Foundation',creator:'Isaac Asimov',genre:'Sci-Fi'},
+  {title:'Neuromancer',creator:'William Gibson',genre:'Sci-Fi'},
+  {title:'The Lord of the Rings',creator:'J.R.R. Tolkien',genre:'Fantasy'},
+  {title:'The Name of the Wind',creator:'Patrick Rothfuss',genre:'Fantasy'},
+  {title:'A Wizard of Earthsea',creator:'Ursula K. Le Guin',genre:'Fantasy'},
+  {title:'The Way of Kings',creator:'Brandon Sanderson',genre:'Fantasy'},
+  {title:'American Gods',creator:'Neil Gaiman',genre:'Fantasy'},
+  {title:'Gone Girl',creator:'Gillian Flynn',genre:'Thriller'},
+  {title:'The Girl with the Dragon Tattoo',creator:'Stieg Larsson',genre:'Thriller'},
+  {title:'The Da Vinci Code',creator:'Dan Brown',genre:'Thriller'},
+  {title:'Big Little Lies',creator:'Liane Moriarty',genre:'Thriller'},
+  {title:'And Then There Were None',creator:'Agatha Christie',genre:'Mystery'},
+  {title:'The Curious Incident of the Dog in the Night-Time',creator:'Mark Haddon',genre:'Mystery'},
+  {title:'In the Woods',creator:'Tana French',genre:'Mystery'},
+  {title:'The Shadow of the Wind',creator:'Carlos Ruiz Zafón',genre:'Mystery'},
+  {title:'The Shining',creator:'Stephen King',genre:'Horror'},
+  {title:'It',creator:'Stephen King',genre:'Horror'},
+  {title:'Dracula',creator:'Bram Stoker',genre:'Horror'},
+  {title:'House of Leaves',creator:'Mark Z. Danielewski',genre:'Horror'},
+  {title:'Pride and Prejudice',creator:'Jane Austen',genre:'Romance'},
+  {title:'Outlander',creator:'Diana Gabaldon',genre:'Romance'},
+  {title:'The Notebook',creator:'Nicholas Sparks',genre:'Romance'},
+  {title:'Sapiens',creator:'Yuval Noah Harari',genre:'Non-fiction'},
+  {title:'Educated',creator:'Tara Westover',genre:'Non-fiction'},
+  {title:'The Immortal Life of Henrietta Lacks',creator:'Rebecca Skloot',genre:'Non-fiction'},
+  {title:'Atomic Habits',creator:'James Clear',genre:'Self-Help'},
+  {title:'The Power of Now',creator:'Eckhart Tolle',genre:'Self-Help'},
+  {title:'Thinking, Fast and Slow',creator:'Daniel Kahneman',genre:'Self-Help'},
+  {title:'To Kill a Mockingbird',creator:'Harper Lee',genre:'Literary Fiction'},
+  {title:'1984',creator:'George Orwell',genre:'Fiction'},
+  {title:'Brave New World',creator:'Aldous Huxley',genre:'Fiction'},
+  {title:'The Great Gatsby',creator:'F. Scott Fitzgerald',genre:'Literary Fiction'},
+  {title:'One Hundred Years of Solitude',creator:'Gabriel García Márquez',genre:'Literary Fiction'},
+  {title:'The Alchemist',creator:'Paulo Coelho',genre:'Fiction'},
+  {title:'Becoming',creator:'Michelle Obama',genre:'Biography'},
+  {title:'Steve Jobs',creator:'Walter Isaacson',genre:'Biography'},
+  {title:'The Diary of a Young Girl',creator:'Anne Frank',genre:'Biography'},
+  {title:'Sapiens',creator:'Yuval Noah Harari',genre:'History'},
+  {title:'The Guns of August',creator:'Barbara Tuchman',genre:'History'},
+];
+
+const MOVIE_DB = [
+  {title:'Interstellar',creator:'Christopher Nolan',genre:'Sci-Fi'},
+  {title:'Blade Runner 2049',creator:'Denis Villeneuve',genre:'Sci-Fi'},
+  {title:'The Matrix',creator:'Wachowskis',genre:'Sci-Fi'},
+  {title:'Arrival',creator:'Denis Villeneuve',genre:'Sci-Fi'},
+  {title:'Ex Machina',creator:'Alex Garland',genre:'Sci-Fi'},
+  {title:'2001: A Space Odyssey',creator:'Stanley Kubrick',genre:'Sci-Fi'},
+  {title:'The Lord of the Rings: Fellowship',creator:'Peter Jackson',genre:'Fantasy'},
+  {title:'Pan\'s Labyrinth',creator:'Guillermo del Toro',genre:'Fantasy'},
+  {title:'The Princess Bride',creator:'Rob Reiner',genre:'Fantasy'},
+  {title:'Inception',creator:'Christopher Nolan',genre:'Thriller'},
+  {title:'Se7en',creator:'David Fincher',genre:'Thriller'},
+  {title:'Parasite',creator:'Bong Joon-ho',genre:'Thriller'},
+  {title:'Gone Girl',creator:'David Fincher',genre:'Thriller'},
+  {title:'Zodiac',creator:'David Fincher',genre:'Mystery'},
+  {title:'Knives Out',creator:'Rian Johnson',genre:'Mystery'},
+  {title:'Rear Window',creator:'Alfred Hitchcock',genre:'Mystery'},
+  {title:'The Usual Suspects',creator:'Bryan Singer',genre:'Mystery'},
+  {title:'Get Out',creator:'Jordan Peele',genre:'Horror'},
+  {title:'Hereditary',creator:'Ari Aster',genre:'Horror'},
+  {title:'The Shining',creator:'Stanley Kubrick',genre:'Horror'},
+  {title:'Midsommar',creator:'Ari Aster',genre:'Horror'},
+  {title:'The Dark Knight',creator:'Christopher Nolan',genre:'Action'},
+  {title:'Mad Max: Fury Road',creator:'George Miller',genre:'Action'},
+  {title:'John Wick',creator:'Chad Stahelski',genre:'Action'},
+  {title:'Avengers: Infinity War',creator:'Russo Brothers',genre:'Action'},
+  {title:'The Grand Budapest Hotel',creator:'Wes Anderson',genre:'Comedy'},
+  {title:'Superbad',creator:'Greg Mottola',genre:'Comedy'},
+  {title:'What We Do in the Shadows',creator:'Taika Waititi',genre:'Comedy'},
+  {title:'The Shawshank Redemption',creator:'Frank Darabont',genre:'Drama'},
+  {title:'Schindler\'s List',creator:'Steven Spielberg',genre:'Drama'},
+  {title:'Whiplash',creator:'Damien Chazelle',genre:'Drama'},
+  {title:'12 Angry Men',creator:'Sidney Lumet',genre:'Drama'},
+  {title:'Portrait of a Lady on Fire',creator:'Céline Sciamma',genre:'Romance'},
+  {title:'Before Sunrise',creator:'Richard Linklater',genre:'Romance'},
+  {title:'Eternal Sunshine of the Spotless Mind',creator:'Michel Gondry',genre:'Romance'},
+  {title:'Up',creator:'Pete Docter',genre:'Animation'},
+  {title:'Spirited Away',creator:'Hayao Miyazaki',genre:'Animation'},
+  {title:'Into the Spider-Verse',creator:'Bob Persichetti',genre:'Animation'},
+  {title:'Free Solo',creator:'Jimmy Chin',genre:'Documentary'},
+  {title:'Won\'t You Be My Neighbor?',creator:'Morgan Neville',genre:'Documentary'},
+  {title:'13th',creator:'Ava DuVernay',genre:'Documentary'},
+  {title:'The Godfather',creator:'Francis Ford Coppola',genre:'Crime'},
+  {title:'Goodfellas',creator:'Martin Scorsese',genre:'Crime'},
+  {title:'Pulp Fiction',creator:'Quentin Tarantino',genre:'Crime'},
+];
+
+function getFavoriteGenres(items) {
+  const counts = {};
+  items.filter(i => i.rating >= 4).forEach(i => {
+    if (i.genre) counts[i.genre] = (counts[i.genre] || 0) + i.rating;
+  });
+  return Object.entries(counts).sort((a,b) => b[1]-a[1]).map(e => e[0]);
+}
+
+function renderRecs() {
+  const bookGenres = getFavoriteGenres(books);
+  const movieGenres = getFavoriteGenres(movies);
+  const myBookTitles = new Set(books.map(b => b.title.toLowerCase()));
+  const myMovieTitles = new Set(movies.map(m => m.title.toLowerCase()));
+
+  // Book recs
+  const bookEl = document.getElementById('book-recs');
+  if (!bookGenres.length) {
+    bookEl.innerHTML = `<div class="rec-empty">Rate some books 4+ stars and we'll recommend similar ones!</div>`;
+  } else {
+    const recs = [];
+    for (const genre of bookGenres) {
+      BOOK_DB.filter(b => b.genre === genre && !myBookTitles.has(b.title.toLowerCase()))
+        .forEach(b => { if (!recs.find(r => r.title === b.title)) recs.push({...b, reason: `Because you love ${genre}`}); });
+    }
+    if (!recs.length) {
+      bookEl.innerHTML = `<div class="rec-empty">You've read everything we'd recommend in your favorite genres — impressive!</div>`;
+    } else {
+      bookEl.innerHTML = `<div class="rec-grid">${recs.slice(0,9).map(r => `
+        <div class="rec-card">
+          <div class="rec-title">${esc(r.title)}</div>
+          <div class="rec-creator">${esc(r.creator)}</div>
+          <div class="meta"><span class="badge">${esc(r.genre)}</span></div>
+          <div class="rec-reason">✦ ${esc(r.reason)}</div>
+        </div>`).join('')}</div>`;
+    }
+  }
+
+  // Movie recs
+  const movieEl = document.getElementById('movie-recs');
+  if (!movieGenres.length) {
+    movieEl.innerHTML = `<div class="rec-empty">Rate some movies 4+ stars and we'll recommend similar ones!</div>`;
+  } else {
+    const recs = [];
+    for (const genre of movieGenres) {
+      MOVIE_DB.filter(m => m.genre === genre && !myMovieTitles.has(m.title.toLowerCase()))
+        .forEach(m => { if (!recs.find(r => r.title === m.title)) recs.push({...m, reason: `Because you love ${genre}`}); });
+    }
+    if (!recs.length) {
+      movieEl.innerHTML = `<div class="rec-empty">You've watched everything we'd recommend in your favorite genres!</div>`;
+    } else {
+      movieEl.innerHTML = `<div class="rec-grid">${recs.slice(0,9).map(r => `
+        <div class="rec-card">
+          <div class="rec-title">${esc(r.title)}</div>
+          <div class="rec-creator">${esc(r.creator)}</div>
+          <div class="meta"><span class="badge">${esc(r.genre)}</span></div>
+          <div class="rec-reason">✦ ${esc(r.reason)}</div>
+        </div>`).join('')}</div>`;
+    }
+  }
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'recs') renderRecs();
+}
+
+function toggleDark() {
+  dark = !dark;
+  document.body.classList.toggle('dark', dark);
+  localStorage.setItem('darkmode', JSON.stringify(dark));
+  document.querySelector('.dark-toggle').textContent = dark ? '☀️ Light' : '🌙 Dark';
+}
+
+if (dark) document.querySelector('.dark-toggle').textContent = '☀️ Light';
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderBooks();
+renderMovies();
+</script>
+</body>
+</html>
