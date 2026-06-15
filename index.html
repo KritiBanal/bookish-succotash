@@ -1,556 +1,1011 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Books & Movies</title>
-<style>
-  :root {
-    --bg: #f8f9fa;
-    --surface: #ffffff;
-    --surface2: #f1f3f5;
-    --border: #dee2e6;
-    --text: #212529;
-    --text2: #6c757d;
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --danger: #ef4444;
-    --star: #f59e0b;
-    --shadow: 0 1px 3px rgba(0,0,0,0.1);
-    --radius: 10px;
-  }
-  .dark {
-    --bg: #0f172a;
-    --surface: #1e293b;
-    --surface2: #273449;
-    --border: #334155;
-    --text: #f1f5f9;
-    --text2: #94a3b8;
-    --shadow: 0 1px 3px rgba(0,0,0,0.4);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.2s, color 0.2s; }
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
-  header h1 { font-size: 1.3rem; font-weight: 700; padding: 1rem 0; }
-  header h1 span { color: var(--primary); }
-  .dark-toggle { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; cursor: pointer; color: var(--text); font-size: 0.85rem; transition: background 0.15s; }
-  .dark-toggle:hover { background: var(--surface2); }
-  nav { display: flex; gap: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; overflow-x: auto; }
-  nav button { background: none; border: none; border-bottom: 3px solid transparent; padding: 0.9rem 1.2rem; cursor: pointer; color: var(--text2); font-size: 0.95rem; font-weight: 500; white-space: nowrap; transition: color 0.15s, border-color 0.15s; }
-  nav button:hover { color: var(--text); }
-  nav button.active { color: var(--primary); border-bottom-color: var(--primary); }
-  .tab { display: none; padding: 1.5rem; max-width: 1000px; margin: 0 auto; }
-  .tab.active { display: block; }
-  .add-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
-  .add-form h2 { font-size: 1rem; margin-bottom: 1rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
-  .form-group { display: flex; flex-direction: column; gap: 4px; }
-  .form-group label { font-size: 0.8rem; color: var(--text2); font-weight: 500; }
-  .form-group input, .form-group select, .form-group textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 0.9rem; outline: none; transition: border-color 0.15s; font-family: inherit; }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
-  .form-group textarea { resize: vertical; min-height: 60px; }
-  .form-group.full { grid-column: 1 / -1; }
-  .star-input { display: flex; gap: 4px; }
-  .star-input span { font-size: 1.4rem; cursor: pointer; color: var(--border); transition: color 0.1s; }
-  .star-input span.active, .star-input span:hover { color: var(--star); }
-  .btn { background: var(--primary); color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.15s; }
-  .btn:hover { background: var(--primary-hover); }
-  .btn-row { margin-top: 1rem; display: flex; gap: 0.5rem; }
-  .search-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; gap: 0.75rem; align-items: center; box-shadow: var(--shadow); }
-  .search-bar input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 0.9rem; outline: none; }
-  .search-bar select { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; color: var(--text); font-size: 0.9rem; outline: none; }
-  .count { font-size: 0.85rem; color: var(--text2); margin-left: auto; white-space: nowrap; }
-  .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-  .item-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem; box-shadow: var(--shadow); position: relative; }
-  .item-card .title { font-weight: 700; font-size: 1rem; margin-bottom: 2px; padding-right: 1.5rem; }
-  .item-card .creator { color: var(--text2); font-size: 0.85rem; margin-bottom: 6px; }
-  .item-card .stars { color: var(--star); font-size: 1rem; margin-bottom: 6px; }
-  .item-card .meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 6px; }
-  .badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 0.75rem; color: var(--text2); }
-  .item-card .notes { font-size: 0.83rem; color: var(--text2); margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px; }
-  .delete-btn { position: absolute; top: 0.75rem; right: 0.75rem; background: none; border: none; color: var(--text2); cursor: pointer; font-size: 1rem; opacity: 0.5; transition: opacity 0.15s, color 0.15s; }
-  .delete-btn:hover { opacity: 1; color: var(--danger); }
-  .empty { text-align: center; padding: 3rem; color: var(--text2); }
-  .empty p { font-size: 1.1rem; margin-bottom: 0.5rem; }
-  .empty small { font-size: 0.85rem; }
-  .rec-section { margin-bottom: 2rem; }
-  .rec-section h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); }
-  .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
-  .rec-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); }
-  .rec-card .rec-title { font-weight: 700; font-size: 0.95rem; }
-  .rec-card .rec-creator { color: var(--text2); font-size: 0.82rem; margin-bottom: 6px; }
-  .rec-card .rec-reason { font-size: 0.8rem; color: var(--primary); margin-top: 6px; }
-  .rec-empty { color: var(--text2); font-size: 0.9rem; padding: 1rem; background: var(--surface); border-radius: var(--radius); border: 1px dashed var(--border); }
-  @media (max-width: 600px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .items-grid { grid-template-columns: 1fr; }
-    header h1 { font-size: 1.1rem; }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookCine — Track Books & Movies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #f8f9fb;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f0f2f5;
+      --bg-card: #ffffff;
+      --border: #e2e6ea;
+      --border-subtle: #eef0f3;
+      --text-primary: #1a1d23;
+      --text-secondary: #5a6072;
+      --text-muted: #8b93a5;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-light: #eef2ff;
+      --accent-2: #ec4899;
+      --accent-2-light: #fdf2f8;
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --star-empty: #d1d5db;
+      --star-filled: #f59e0b;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+      --transition: 0.18s ease;
+    }
+    [data-theme="dark"] {
+      --bg-primary: #0f1117;
+      --bg-secondary: #1a1d27;
+      --bg-tertiary: #232636;
+      --bg-card: #1e2130;
+      --border: #2e3248;
+      --border-subtle: #252840;
+      --text-primary: #e8eaf0;
+      --text-secondary: #9ba3be;
+      --text-muted: #636b85;
+      --accent: #818cf8;
+      --accent-hover: #6366f1;
+      --accent-light: #1e2040;
+      --accent-2: #f472b6;
+      --accent-2-light: #2a1528;
+      --danger: #f87171;
+      --danger-light: #2a1515;
+      --star-empty: #3d4261;
+      --star-filled: #fbbf24;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; transition: background var(--transition), color var(--transition); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Header */
+    .app-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
+    .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .logo-text { font-size: 20px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
+    .logo-text span { background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .dark-toggle { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all var(--transition); }
+    .dark-toggle:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+
+    /* Nav Tabs */
+    .nav-tabs { background: var(--bg-secondary); border-bottom: 1px solid var(--border); padding: 0 24px; }
+    .nav-tabs-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 4px; }
+    .tab-btn { padding: 14px 20px; border: none; background: none; color: var(--text-muted); font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all var(--transition); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .tab-btn:hover { color: var(--text-primary); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn .badge { background: var(--accent-light); color: var(--accent); font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 20px; min-width: 20px; text-align: center; }
+    .tab-btn.active .badge { background: var(--accent); color: white; }
+
+    /* Main */
+    .main { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Toolbar */
+    .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; pointer-events: none; }
+    .search-input { width: 100%; padding: 10px 12px 10px 38px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); font-family: var(--font); font-size: 14px; transition: border-color var(--transition), box-shadow var(--transition); }
+    .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .search-input::placeholder { color: var(--text-muted); }
+    .filter-select { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary); font-family: var(--font); font-size: 14px; cursor: pointer; transition: border-color var(--transition); min-width: 140px; }
+    .filter-select:focus { outline: none; border-color: var(--accent); }
+
+    /* Buttons */
+    .btn { padding: 10px 18px; border-radius: var(--radius-sm); border: none; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: all var(--transition); display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(99,102,241,0.3); transform: translateY(-1px); }
+    .btn-ghost { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg-card); color: var(--text-primary); }
+
+    /* Add Form */
+    .add-form-wrapper { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 24px; overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow var(--transition); }
+    .add-form-wrapper.open { box-shadow: var(--shadow-md); }
+    .form-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; transition: background var(--transition); }
+    .form-header:hover { background: var(--bg-tertiary); }
+    .form-header-left { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; color: var(--text-primary); }
+    .form-header-icon { width: 32px; height: 32px; background: var(--accent-light); color: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .form-chevron { color: var(--text-muted); font-size: 20px; transition: transform var(--transition); line-height: 1; }
+    .add-form-wrapper.open .form-chevron { transform: rotate(180deg); }
+    .form-body { display: none; padding: 0 20px 20px; border-top: 1px solid var(--border-subtle); }
+    .add-form-wrapper.open .form-body { display: block; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .form-input, .form-textarea { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); font-size: 14px; transition: border-color var(--transition), box-shadow var(--transition); }
+    .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); }
+    .form-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+
+    /* Star Rating */
+    .star-input { display: flex; gap: 4px; align-items: center; }
+    .star-input .star { font-size: 26px; cursor: pointer; color: var(--star-empty); transition: color var(--transition), transform var(--transition); user-select: none; line-height: 1; }
+    .star-input .star.hovered, .star-input .star.selected { color: var(--star-filled); transform: scale(1.2); }
+    .star-rating-display { display: flex; gap: 2px; }
+    .star-rating-display .star { font-size: 14px; color: var(--star-empty); }
+    .star-rating-display .star.filled { color: var(--star-filled); }
+
+    /* Stats */
+    .stats-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-chip { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm); }
+    .stat-chip strong { color: var(--text-primary); font-weight: 600; }
+
+    /* Items Grid */
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+    /* Item Card */
+    .item-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; box-shadow: var(--shadow-sm); transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition); display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden; animation: fadeInUp 0.25s ease both; }
+    .item-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); opacity: 0; transition: opacity var(--transition); }
+    .item-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--accent); }
+    .item-card:hover::before { opacity: 1; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .card-title { font-size: 16px; font-weight: 600; color: var(--text-primary); line-height: 1.3; }
+    .card-delete { width: 30px; height: 30px; border: none; background: none; color: var(--text-muted); cursor: pointer; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all var(--transition); flex-shrink: 0; }
+    .card-delete:hover { background: var(--danger-light); color: var(--danger); }
+    .card-creator { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+    .card-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .card-genre { font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 20px; background: var(--accent-light); color: var(--accent); }
+    .card-date { font-size: 12px; color: var(--text-muted); }
+    .card-notes { font-size: 13px; color: var(--text-secondary); line-height: 1.5; border-top: 1px solid var(--border-subtle); padding-top: 10px; }
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 60px 24px; color: var(--text-muted); grid-column: 1/-1; }
+    .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.6; }
+    .empty-title { font-size: 18px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+    .empty-desc { font-size: 14px; max-width: 340px; margin: 0 auto; line-height: 1.6; }
+
+    /* Recommendations */
+    .recs-header { margin-bottom: 28px; }
+    .recs-title { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .recs-subtitle { font-size: 14px; color: var(--text-secondary); }
+    .recs-section { margin-bottom: 36px; }
+    .recs-section-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .recs-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .rec-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .rec-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; box-shadow: var(--shadow-sm); transition: box-shadow var(--transition), transform var(--transition); display: flex; flex-direction: column; gap: 8px; animation: fadeInUp 0.25s ease both; }
+    .rec-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .rec-title { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.3; }
+    .rec-creator { font-size: 13px; color: var(--text-secondary); }
+    .rec-reason { font-size: 12px; color: var(--accent); background: var(--accent-light); padding: 5px 10px; border-radius: 6px; margin-top: 4px; }
+    .rec-genre-tag { display: inline-flex; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: var(--accent-2-light); color: var(--accent-2); width: fit-content; }
+    .no-recs { text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: var(--radius-lg); line-height: 1.6; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 18px; font-size: 14px; color: var(--text-primary); box-shadow: var(--shadow-lg); z-index: 999; display: flex; align-items: center; gap: 10px; transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); max-width: 320px; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { font-size: 20px; flex-shrink: 0; }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 640px) {
+      .header-inner { height: 56px; }
+      .main { padding: 16px 14px 48px; }
+      .logo-text { font-size: 17px; }
+      .tab-btn { padding: 12px 12px; font-size: 13px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .items-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 380px) {
+      .tab-btn .tab-label { display: none; }
+      .tab-btn { padding: 12px 10px; }
+    }
+  </style>
 </head>
 <body>
-<header>
-  <h1>My <span>Books</span> & <span>Movies</span></h1>
-  <button class="dark-toggle" onclick="toggleDark()">🌙 Dark</button>
+
+<header class="app-header">
+  <div class="header-inner">
+    <a class="logo" href="#">
+      <div class="logo-icon">📚</div>
+      <span class="logo-text">Book<span>Cine</span></span>
+    </a>
+    <button class="dark-toggle" id="darkToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+  </div>
 </header>
-<nav>
-  <button class="active" onclick="switchTab('books', this)">📚 Books</button>
-  <button onclick="switchTab('movies', this)">🎬 Movies</button>
-  <button onclick="switchTab('recs', this)">✨ Recommendations</button>
+
+<nav class="nav-tabs" role="tablist">
+  <div class="nav-tabs-inner">
+    <button class="tab-btn active" role="tab" data-tab="books" aria-selected="true">
+      📖 <span class="tab-label">Books</span>
+      <span class="badge" id="booksBadge">0</span>
+    </button>
+    <button class="tab-btn" role="tab" data-tab="movies" aria-selected="false">
+      🎬 <span class="tab-label">Movies</span>
+      <span class="badge" id="moviesBadge">0</span>
+    </button>
+    <button class="tab-btn" role="tab" data-tab="recs" aria-selected="false">
+      ✨ <span class="tab-label">Recommendations</span>
+    </button>
+  </div>
 </nav>
 
-<!-- BOOKS TAB -->
-<div id="tab-books" class="tab active">
-  <div class="add-form">
-    <h2>Add a Book</h2>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Title *</label>
-        <input id="b-title" type="text" placeholder="Book title">
-      </div>
-      <div class="form-group">
-        <label>Author *</label>
-        <input id="b-author" type="text" placeholder="Author name">
-      </div>
-      <div class="form-group">
-        <label>Genre</label>
-        <select id="b-genre">
-          <option value="">Select genre</option>
-          <option>Fiction</option><option>Non-fiction</option><option>Mystery</option>
-          <option>Sci-Fi</option><option>Fantasy</option><option>Romance</option>
-          <option>Thriller</option><option>Biography</option><option>History</option>
-          <option>Self-Help</option><option>Horror</option><option>Literary Fiction</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Date Read</label>
-        <input id="b-date" type="date">
-      </div>
-      <div class="form-group">
-        <label>Your Rating</label>
-        <div class="star-input" id="b-stars" data-val="0">
-          <span onclick="setStars('b-stars',1)">★</span>
-          <span onclick="setStars('b-stars',2)">★</span>
-          <span onclick="setStars('b-stars',3)">★</span>
-          <span onclick="setStars('b-stars',4)">★</span>
-          <span onclick="setStars('b-stars',5)">★</span>
+<main class="main">
+
+  <!-- BOOKS TAB -->
+  <div class="tab-panel active" id="tab-books" role="tabpanel">
+    <div class="add-form-wrapper" id="bookFormWrapper">
+      <div class="form-header" id="bookFormToggle">
+        <div class="form-header-left">
+          <div class="form-header-icon">➕</div>
+          Add a Book
         </div>
+        <span class="form-chevron">⌄</span>
       </div>
-      <div class="form-group full">
-        <label>Notes</label>
-        <textarea id="b-notes" placeholder="Your thoughts..."></textarea>
+      <div class="form-body">
+        <form id="bookForm" novalidate>
+          <div class="form-grid">
+            <div class="form-field">
+              <label class="form-label" for="bookTitle">Title *</label>
+              <input class="form-input" type="text" id="bookTitle" placeholder="e.g. Dune" required />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bookAuthor">Author *</label>
+              <input class="form-input" type="text" id="bookAuthor" placeholder="e.g. Frank Herbert" required />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bookGenre">Genre *</label>
+              <select class="form-input" id="bookGenre" required style="width:100%">
+                <option value="" disabled selected>Select genre…</option>
+                <option>Science Fiction</option><option>Fantasy</option><option>Mystery</option>
+                <option>Thriller</option><option>Romance</option><option>Historical Fiction</option>
+                <option>Biography</option><option>Horror</option><option>Literary Fiction</option>
+                <option>Adventure</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bookDate">Date Read</label>
+              <input class="form-input" type="date" id="bookDate" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Your Rating *</label>
+              <div class="star-input" id="bookStars" data-rating="0">
+                <span class="star" data-v="1">★</span><span class="star" data-v="2">★</span>
+                <span class="star" data-v="3">★</span><span class="star" data-v="4">★</span>
+                <span class="star" data-v="5">★</span>
+              </div>
+            </div>
+            <div class="form-field full">
+              <label class="form-label" for="bookNotes">Notes</label>
+              <textarea class="form-textarea" id="bookNotes" placeholder="Your thoughts, favourite quotes, memorable passages…"></textarea>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-ghost" id="bookFormCancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">💾 Save Book</button>
+          </div>
+        </form>
       </div>
     </div>
-    <div class="btn-row"><button class="btn" onclick="addBook()">Add Book</button></div>
-  </div>
-  <div class="search-bar">
-    <input id="b-search" type="text" placeholder="Search books..." oninput="renderBooks()">
-    <select id="b-filter-genre" onchange="renderBooks()">
-      <option value="">All genres</option>
-      <option>Fiction</option><option>Non-fiction</option><option>Mystery</option>
-      <option>Sci-Fi</option><option>Fantasy</option><option>Romance</option>
-      <option>Thriller</option><option>Biography</option><option>History</option>
-      <option>Self-Help</option><option>Horror</option><option>Literary Fiction</option>
-    </select>
-    <select id="b-sort" onchange="renderBooks()">
-      <option value="newest">Newest</option>
-      <option value="rating">Top Rated</option>
-      <option value="title">A–Z</option>
-    </select>
-    <span class="count" id="b-count"></span>
-  </div>
-  <div class="items-grid" id="books-list"></div>
-</div>
 
-<!-- MOVIES TAB -->
-<div id="tab-movies" class="tab">
-  <div class="add-form">
-    <h2>Add a Movie</h2>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Title *</label>
-        <input id="m-title" type="text" placeholder="Movie title">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="search" id="bookSearch" placeholder="Search by title or author…" />
       </div>
-      <div class="form-group">
-        <label>Director</label>
-        <input id="m-director" type="text" placeholder="Director name">
-      </div>
-      <div class="form-group">
-        <label>Genre</label>
-        <select id="m-genre">
-          <option value="">Select genre</option>
-          <option>Action</option><option>Comedy</option><option>Drama</option>
-          <option>Horror</option><option>Sci-Fi</option><option>Thriller</option>
-          <option>Romance</option><option>Animation</option><option>Documentary</option>
-          <option>Fantasy</option><option>Mystery</option><option>Crime</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Date Watched</label>
-        <input id="m-date" type="date">
-      </div>
-      <div class="form-group">
-        <label>Your Rating</label>
-        <div class="star-input" id="m-stars" data-val="0">
-          <span onclick="setStars('m-stars',1)">★</span>
-          <span onclick="setStars('m-stars',2)">★</span>
-          <span onclick="setStars('m-stars',3)">★</span>
-          <span onclick="setStars('m-stars',4)">★</span>
-          <span onclick="setStars('m-stars',5)">★</span>
+      <select class="filter-select" id="bookFilter">
+        <option value="">All genres</option>
+        <option>Science Fiction</option><option>Fantasy</option><option>Mystery</option>
+        <option>Thriller</option><option>Romance</option><option>Historical Fiction</option>
+        <option>Biography</option><option>Horror</option><option>Literary Fiction</option>
+        <option>Adventure</option><option>Other</option>
+      </select>
+      <select class="filter-select" id="bookSort" style="min-width:140px">
+        <option value="added-desc">Newest added</option>
+        <option value="added-asc">Oldest added</option>
+        <option value="rating-desc">Highest rated</option>
+        <option value="rating-asc">Lowest rated</option>
+        <option value="title-asc">A → Z</option>
+      </select>
+    </div>
+
+    <div class="stats-bar" id="booksStats"></div>
+    <div class="items-grid" id="booksGrid"></div>
+  </div>
+
+  <!-- MOVIES TAB -->
+  <div class="tab-panel" id="tab-movies" role="tabpanel">
+    <div class="add-form-wrapper" id="movieFormWrapper">
+      <div class="form-header" id="movieFormToggle">
+        <div class="form-header-left">
+          <div class="form-header-icon">➕</div>
+          Add a Movie
         </div>
+        <span class="form-chevron">⌄</span>
       </div>
-      <div class="form-group full">
-        <label>Notes</label>
-        <textarea id="m-notes" placeholder="Your thoughts..."></textarea>
+      <div class="form-body">
+        <form id="movieForm" novalidate>
+          <div class="form-grid">
+            <div class="form-field">
+              <label class="form-label" for="movieTitle">Title *</label>
+              <input class="form-input" type="text" id="movieTitle" placeholder="e.g. Interstellar" required />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="movieDirector">Director *</label>
+              <input class="form-input" type="text" id="movieDirector" placeholder="e.g. Christopher Nolan" required />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="movieGenre">Genre *</label>
+              <select class="form-input" id="movieGenre" required style="width:100%">
+                <option value="" disabled selected>Select genre…</option>
+                <option>Science Fiction</option><option>Fantasy</option><option>Mystery</option>
+                <option>Thriller</option><option>Romance</option><option>Historical</option>
+                <option>Biography</option><option>Horror</option><option>Action/Adventure</option>
+                <option>Drama</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="movieDate">Date Watched</label>
+              <input class="form-input" type="date" id="movieDate" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Your Rating *</label>
+              <div class="star-input" id="movieStars" data-rating="0">
+                <span class="star" data-v="1">★</span><span class="star" data-v="2">★</span>
+                <span class="star" data-v="3">★</span><span class="star" data-v="4">★</span>
+                <span class="star" data-v="5">★</span>
+              </div>
+            </div>
+            <div class="form-field full">
+              <label class="form-label" for="movieNotes">Notes</label>
+              <textarea class="form-textarea" id="movieNotes" placeholder="Your thoughts, favourite scenes, standout performances…"></textarea>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-ghost" id="movieFormCancel">Cancel</button>
+            <button type="submit" class="btn btn-primary">💾 Save Movie</button>
+          </div>
+        </form>
       </div>
     </div>
-    <div class="btn-row"><button class="btn" onclick="addMovie()">Add Movie</button></div>
-  </div>
-  <div class="search-bar">
-    <input id="m-search" type="text" placeholder="Search movies..." oninput="renderMovies()">
-    <select id="m-filter-genre" onchange="renderMovies()">
-      <option value="">All genres</option>
-      <option>Action</option><option>Comedy</option><option>Drama</option>
-      <option>Horror</option><option>Sci-Fi</option><option>Thriller</option>
-      <option>Romance</option><option>Animation</option><option>Documentary</option>
-      <option>Fantasy</option><option>Mystery</option><option>Crime</option>
-    </select>
-    <select id="m-sort" onchange="renderMovies()">
-      <option value="newest">Newest</option>
-      <option value="rating">Top Rated</option>
-      <option value="title">A–Z</option>
-    </select>
-    <span class="count" id="m-count"></span>
-  </div>
-  <div class="items-grid" id="movies-list"></div>
-</div>
 
-<!-- RECOMMENDATIONS TAB -->
-<div id="tab-recs" class="tab">
-  <div class="rec-section">
-    <h2>📚 Book Recommendations</h2>
-    <div id="book-recs"></div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="search" id="movieSearch" placeholder="Search by title or director…" />
+      </div>
+      <select class="filter-select" id="movieFilter">
+        <option value="">All genres</option>
+        <option>Science Fiction</option><option>Fantasy</option><option>Mystery</option>
+        <option>Thriller</option><option>Romance</option><option>Historical</option>
+        <option>Biography</option><option>Horror</option><option>Action/Adventure</option>
+        <option>Drama</option><option>Other</option>
+      </select>
+      <select class="filter-select" id="movieSort" style="min-width:140px">
+        <option value="added-desc">Newest added</option>
+        <option value="added-asc">Oldest added</option>
+        <option value="rating-desc">Highest rated</option>
+        <option value="rating-asc">Lowest rated</option>
+        <option value="title-asc">A → Z</option>
+      </select>
+    </div>
+
+    <div class="stats-bar" id="moviesStats"></div>
+    <div class="items-grid" id="moviesGrid"></div>
   </div>
-  <div class="rec-section">
-    <h2>🎬 Movie Recommendations</h2>
-    <div id="movie-recs"></div>
+
+  <!-- RECS TAB -->
+  <div class="tab-panel" id="tab-recs" role="tabpanel">
+    <div class="recs-header">
+      <h1 class="recs-title">✨ Your Recommendations</h1>
+      <p class="recs-subtitle">Personalised suggestions based on your highest-rated reads and watches (4+ stars).</p>
+    </div>
+    <div id="recsContent"></div>
   </div>
+
+</main>
+
+<div class="toast" id="toast" role="alert" aria-live="polite">
+  <span class="toast-icon" id="toastIcon">✅</span>
+  <span id="toastMsg"></span>
 </div>
 
 <script>
-// ── Data ──────────────────────────────────────────────────────────────────────
-let books = JSON.parse(localStorage.getItem('mybooks') || '[]');
-let movies = JSON.parse(localStorage.getItem('mymovies') || '[]');
-let dark = JSON.parse(localStorage.getItem('darkmode') || 'false');
+/* ================================================================
+   CURATED DATA
+================================================================ */
+const BOOK_RECS = {
+  "Science Fiction": [
+    {title:"Dune",creator:"Frank Herbert"},
+    {title:"The Martian",creator:"Andy Weir"},
+    {title:"Ender's Game",creator:"Orson Scott Card"},
+    {title:"Neuromancer",creator:"William Gibson"},
+    {title:"The Left Hand of Darkness",creator:"Ursula K. Le Guin"},
+    {title:"Foundation",creator:"Isaac Asimov"},
+    {title:"Brave New World",creator:"Aldous Huxley"},
+    {title:"The Hitchhiker's Guide to the Galaxy",creator:"Douglas Adams"},
+  ],
+  "Fantasy": [
+    {title:"The Name of the Wind",creator:"Patrick Rothfuss"},
+    {title:"The Way of Kings",creator:"Brandon Sanderson"},
+    {title:"American Gods",creator:"Neil Gaiman"},
+    {title:"The Color of Magic",creator:"Terry Pratchett"},
+    {title:"His Dark Materials",creator:"Philip Pullman"},
+    {title:"The Lies of Locke Lamora",creator:"Scott Lynch"},
+    {title:"Mistborn",creator:"Brandon Sanderson"},
+  ],
+  "Mystery": [
+    {title:"Gone Girl",creator:"Gillian Flynn"},
+    {title:"The Girl with the Dragon Tattoo",creator:"Stieg Larsson"},
+    {title:"Big Little Lies",creator:"Liane Moriarty"},
+    {title:"In the Woods",creator:"Tana French"},
+    {title:"The No. 1 Ladies' Detective Agency",creator:"Alexander McCall Smith"},
+    {title:"And Then There Were None",creator:"Agatha Christie"},
+    {title:"The Big Sleep",creator:"Raymond Chandler"},
+  ],
+  "Thriller": [
+    {title:"The Da Vinci Code",creator:"Dan Brown"},
+    {title:"The Girl on the Train",creator:"Paula Hawkins"},
+    {title:"Gone Girl",creator:"Gillian Flynn"},
+    {title:"I Am Pilgrim",creator:"Terry Hayes"},
+    {title:"The Bourne Identity",creator:"Robert Ludlum"},
+    {title:"The Firm",creator:"John Grisham"},
+  ],
+  "Romance": [
+    {title:"Pride and Prejudice",creator:"Jane Austen"},
+    {title:"Outlander",creator:"Diana Gabaldon"},
+    {title:"The Notebook",creator:"Nicholas Sparks"},
+    {title:"Me Before You",creator:"Jojo Moyes"},
+    {title:"The Hating Game",creator:"Sally Thorne"},
+    {title:"Beach Read",creator:"Emily Henry"},
+  ],
+  "Historical Fiction": [
+    {title:"The Pillars of the Earth",creator:"Ken Follett"},
+    {title:"All the Light We Cannot See",creator:"Anthony Doerr"},
+    {title:"The Book Thief",creator:"Markus Zusak"},
+    {title:"Wolf Hall",creator:"Hilary Mantel"},
+    {title:"Pachinko",creator:"Min Jin Lee"},
+    {title:"The Shadow of the Wind",creator:"Carlos Ruiz Zafón"},
+  ],
+  "Biography": [
+    {title:"Steve Jobs",creator:"Walter Isaacson"},
+    {title:"Educated",creator:"Tara Westover"},
+    {title:"Becoming",creator:"Michelle Obama"},
+    {title:"The Diary of a Young Girl",creator:"Anne Frank"},
+    {title:"Long Walk to Freedom",creator:"Nelson Mandela"},
+    {title:"Born a Crime",creator:"Trevor Noah"},
+  ],
+  "Horror": [
+    {title:"It",creator:"Stephen King"},
+    {title:"The Shining",creator:"Stephen King"},
+    {title:"House of Leaves",creator:"Mark Z. Danielewski"},
+    {title:"Mexican Gothic",creator:"Silvia Moreno-Garcia"},
+    {title:"The Haunting of Hill House",creator:"Shirley Jackson"},
+    {title:"Bird Box",creator:"Josh Malerman"},
+  ],
+  "Literary Fiction": [
+    {title:"To Kill a Mockingbird",creator:"Harper Lee"},
+    {title:"1984",creator:"George Orwell"},
+    {title:"The Great Gatsby",creator:"F. Scott Fitzgerald"},
+    {title:"Normal People",creator:"Sally Rooney"},
+    {title:"A Little Life",creator:"Hanya Yanagihara"},
+    {title:"The Goldfinch",creator:"Donna Tartt"},
+  ],
+  "Adventure": [
+    {title:"Into the Wild",creator:"Jon Krakauer"},
+    {title:"The Alchemist",creator:"Paulo Coelho"},
+    {title:"Life of Pi",creator:"Yann Martel"},
+    {title:"Robinson Crusoe",creator:"Daniel Defoe"},
+    {title:"Treasure Island",creator:"Robert Louis Stevenson"},
+  ],
+};
 
-if (dark) document.body.classList.add('dark');
+const MOVIE_RECS = {
+  "Science Fiction": [
+    {title:"Interstellar",creator:"Christopher Nolan"},
+    {title:"Blade Runner 2049",creator:"Denis Villeneuve"},
+    {title:"Arrival",creator:"Denis Villeneuve"},
+    {title:"The Matrix",creator:"Wachowskis"},
+    {title:"2001: A Space Odyssey",creator:"Stanley Kubrick"},
+    {title:"Ex Machina",creator:"Alex Garland"},
+    {title:"Dune",creator:"Denis Villeneuve"},
+    {title:"Everything Everywhere All at Once",creator:"Daniels"},
+  ],
+  "Fantasy": [
+    {title:"The Lord of the Rings: The Fellowship of the Ring",creator:"Peter Jackson"},
+    {title:"Pan's Labyrinth",creator:"Guillermo del Toro"},
+    {title:"Princess Mononoke",creator:"Hayao Miyazaki"},
+    {title:"The Princess Bride",creator:"Rob Reiner"},
+    {title:"Spirited Away",creator:"Hayao Miyazaki"},
+    {title:"Willow",creator:"Ron Howard"},
+    {title:"Labyrinth",creator:"Jim Henson"},
+  ],
+  "Mystery": [
+    {title:"Knives Out",creator:"Rian Johnson"},
+    {title:"Chinatown",creator:"Roman Polanski"},
+    {title:"Rear Window",creator:"Alfred Hitchcock"},
+    {title:"The Usual Suspects",creator:"Bryan Singer"},
+    {title:"Memento",creator:"Christopher Nolan"},
+    {title:"Zodiac",creator:"David Fincher"},
+    {title:"Gone Girl",creator:"David Fincher"},
+  ],
+  "Thriller": [
+    {title:"No Country for Old Men",creator:"Coen Brothers"},
+    {title:"Parasite",creator:"Bong Joon-ho"},
+    {title:"Oldboy",creator:"Park Chan-wook"},
+    {title:"The Silence of the Lambs",creator:"Jonathan Demme"},
+    {title:"Se7en",creator:"David Fincher"},
+    {title:"Prisoners",creator:"Denis Villeneuve"},
+    {title:"Nightcrawler",creator:"Dan Gilroy"},
+  ],
+  "Romance": [
+    {title:"Eternal Sunshine of the Spotless Mind",creator:"Michel Gondry"},
+    {title:"Before Sunrise",creator:"Richard Linklater"},
+    {title:"La La Land",creator:"Damien Chazelle"},
+    {title:"Casablanca",creator:"Michael Curtiz"},
+    {title:"The Notebook",creator:"Nick Cassavetes"},
+    {title:"Pride & Prejudice",creator:"Joe Wright"},
+    {title:"About Time",creator:"Richard Curtis"},
+  ],
+  "Historical": [
+    {title:"Schindler's List",creator:"Steven Spielberg"},
+    {title:"Lawrence of Arabia",creator:"David Lean"},
+    {title:"12 Years a Slave",creator:"Steve McQueen"},
+    {title:"Gladiator",creator:"Ridley Scott"},
+    {title:"The King's Speech",creator:"Tom Hooper"},
+    {title:"Lincoln",creator:"Steven Spielberg"},
+    {title:"Braveheart",creator:"Mel Gibson"},
+  ],
+  "Biography": [
+    {title:"The Social Network",creator:"David Fincher"},
+    {title:"Bohemian Rhapsody",creator:"Bryan Singer"},
+    {title:"Oppenheimer",creator:"Christopher Nolan"},
+    {title:"Ray",creator:"Taylor Hackford"},
+    {title:"Walk the Line",creator:"James Mangold"},
+    {title:"Jobs",creator:"Joshua Michael Stern"},
+    {title:"Milk",creator:"Gus Van Sant"},
+  ],
+  "Horror": [
+    {title:"Get Out",creator:"Jordan Peele"},
+    {title:"Hereditary",creator:"Ari Aster"},
+    {title:"The Witch",creator:"Robert Eggers"},
+    {title:"A Quiet Place",creator:"John Krasinski"},
+    {title:"Midsommar",creator:"Ari Aster"},
+    {title:"The Babadook",creator:"Jennifer Kent"},
+    {title:"It Follows",creator:"David Robert Mitchell"},
+  ],
+  "Action/Adventure": [
+    {title:"Mad Max: Fury Road",creator:"George Miller"},
+    {title:"John Wick",creator:"Chad Stahelski"},
+    {title:"The Dark Knight",creator:"Christopher Nolan"},
+    {title:"Raiders of the Lost Ark",creator:"Steven Spielberg"},
+    {title:"Kill Bill",creator:"Quentin Tarantino"},
+    {title:"Speed Racer",creator:"Wachowskis"},
+    {title:"Mission: Impossible - Fallout",creator:"Christopher McQuarrie"},
+  ],
+  "Drama": [
+    {title:"The Shawshank Redemption",creator:"Frank Darabont"},
+    {title:"Forrest Gump",creator:"Robert Zemeckis"},
+    {title:"Good Will Hunting",creator:"Gus Van Sant"},
+    {title:"Whiplash",creator:"Damien Chazelle"},
+    {title:"Manchester by the Sea",creator:"Kenneth Lonergan"},
+    {title:"Moonlight",creator:"Barry Jenkins"},
+    {title:"The Truman Show",creator:"Peter Weir"},
+  ],
+};
 
-function save() {
-  localStorage.setItem('mybooks', JSON.stringify(books));
-  localStorage.setItem('mymovies', JSON.stringify(movies));
+/* ================================================================
+   STATE & STORAGE
+================================================================ */
+let books = [];
+let movies = [];
+let darkMode = false;
+
+function save(key, data) { try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){} }
+function load(key, def) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e){ return def; } }
+
+function loadAll() {
+  books    = load('bc_books', []);
+  movies   = load('bc_movies', []);
+  darkMode = load('bc_dark', false);
 }
 
-// ── Stars ─────────────────────────────────────────────────────────────────────
-function setStars(id, val) {
-  const el = document.getElementById(id);
-  el.dataset.val = val;
-  [...el.children].forEach((s, i) => s.classList.toggle('active', i < val));
+/* ================================================================
+   THEME
+================================================================ */
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  document.getElementById('darkToggle').textContent = darkMode ? '☀️' : '🌙';
 }
-function getStars(id) { return parseInt(document.getElementById(id).dataset.val) || 0; }
-function resetStars(id) { setStars(id, 0); }
-function starsHtml(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
 
-// ── Books ─────────────────────────────────────────────────────────────────────
-function addBook() {
-  const title = document.getElementById('b-title').value.trim();
-  const author = document.getElementById('b-author').value.trim();
-  if (!title) { alert('Please enter a title.'); return; }
-  books.unshift({
-    id: Date.now(), title, author,
-    genre: document.getElementById('b-genre').value,
-    date: document.getElementById('b-date').value,
-    rating: getStars('b-stars'),
-    notes: document.getElementById('b-notes').value.trim(),
+document.getElementById('darkToggle').addEventListener('click', () => {
+  darkMode = !darkMode;
+  save('bc_dark', darkMode);
+  applyTheme();
+});
+
+/* ================================================================
+   TABS
+================================================================ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+    document.getElementById('tab-'+t).classList.add('active');
+    if (t === 'recs') renderRecs();
   });
-  save();
-  ['b-title','b-author','b-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('b-genre').value = '';
-  document.getElementById('b-date').value = '';
-  resetStars('b-stars');
-  renderBooks();
-  renderRecs();
+});
+
+/* ================================================================
+   FORM TOGGLE
+================================================================ */
+function toggleForm(id) { document.getElementById(id).classList.toggle('open'); }
+function closeForm(id)  { document.getElementById(id).classList.remove('open'); }
+
+document.getElementById('bookFormToggle').addEventListener('click', () => toggleForm('bookFormWrapper'));
+document.getElementById('bookFormCancel').addEventListener('click', () => closeForm('bookFormWrapper'));
+document.getElementById('movieFormToggle').addEventListener('click', () => toggleForm('movieFormWrapper'));
+document.getElementById('movieFormCancel').addEventListener('click', () => closeForm('movieFormWrapper'));
+
+/* ================================================================
+   STAR RATING INPUTS
+================================================================ */
+function initStarInput(id) {
+  const c = document.getElementById(id);
+  const stars = c.querySelectorAll('.star');
+  stars.forEach(s => {
+    s.addEventListener('mouseenter', () => {
+      const v = +s.dataset.v;
+      stars.forEach(x => x.classList.toggle('hovered', +x.dataset.v <= v));
+    });
+    s.addEventListener('mouseleave', () => stars.forEach(x => x.classList.remove('hovered')));
+    s.addEventListener('click', () => {
+      const v = +s.dataset.v;
+      c.dataset.rating = v;
+      stars.forEach(x => x.classList.toggle('selected', +x.dataset.v <= v));
+    });
+  });
+}
+
+function getStarRating(id) { return +document.getElementById(id).dataset.rating; }
+
+function resetStarInput(id) {
+  const c = document.getElementById(id);
+  c.dataset.rating = '0';
+  c.querySelectorAll('.star').forEach(s => s.classList.remove('selected','hovered'));
+}
+
+/* ================================================================
+   TOAST
+================================================================ */
+let toastTimer;
+function showToast(msg, icon) {
+  icon = icon || '✅';
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ================================================================
+   HELPERS
+================================================================ */
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(s) {
+  if (!s) return '';
+  try { return new Date(s+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); }
+  catch(e){ return s; }
+}
+
+function starsHTML(r) {
+  let h = '<div class="star-rating-display">';
+  for (let i=1;i<=5;i++) h += `<span class="star ${i<=r?'filled':''}">★</span>`;
+  return h + '</div>';
+}
+
+function avgRating(arr) {
+  if (!arr.length) return '—';
+  return (arr.reduce((s,x) => s+x.rating, 0)/arr.length).toFixed(1);
+}
+
+function sortItems(arr, by) {
+  const a = [...arr];
+  if (by==='added-desc')   return a.sort((x,y)=>(y.added||0)-(x.added||0));
+  if (by==='added-asc')    return a.sort((x,y)=>(x.added||0)-(y.added||0));
+  if (by==='rating-desc')  return a.sort((x,y)=>y.rating-x.rating);
+  if (by==='rating-asc')   return a.sort((x,y)=>x.rating-y.rating);
+  if (by==='title-asc')    return a.sort((x,y)=>x.title.localeCompare(y.title));
+  return a;
+}
+
+/* ================================================================
+   BOOKS RENDER
+================================================================ */
+function renderBooks() {
+  const q     = document.getElementById('bookSearch').value.toLowerCase();
+  const genre = document.getElementById('bookFilter').value;
+  const sort  = document.getElementById('bookSort').value;
+
+  let items = books.filter(b =>
+    (!q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)) &&
+    (!genre || b.genre === genre)
+  );
+  items = sortItems(items, sort);
+
+  document.getElementById('booksBadge').textContent = books.length;
+
+  // Stats
+  const st = document.getElementById('booksStats');
+  if (books.length) {
+    const genres = [...new Set(books.map(b=>b.genre))].slice(0,3).join(' · ');
+    st.innerHTML =
+      `<div class="stat-chip">📚 <strong>${books.length}</strong> book${books.length!==1?'s':''}</div>` +
+      `<div class="stat-chip">⭐ Avg <strong>${avgRating(books)}</strong></div>` +
+      (genres ? `<div class="stat-chip">🏷️ ${esc(genres)}</div>` : '');
+  } else { st.innerHTML = ''; }
+
+  const grid = document.getElementById('booksGrid');
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">${books.length?'🔍':'📚'}</div>
+      <div class="empty-title">${books.length?'No results found':'No books yet'}</div>
+      <div class="empty-desc">${books.length
+        ?'Try adjusting your search or filter.'
+        :'Add your first book using the form above and start building your personal library!'}</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map((b,i) => `
+    <div class="item-card" style="animation-delay:${Math.min(i,8)*0.04}s">
+      <div class="card-header">
+        <div class="card-title">${esc(b.title)}</div>
+        <button class="card-delete" onclick="deleteBook('${b.id}')" aria-label="Delete ${esc(b.title)}">✕</button>
+      </div>
+      <div class="card-creator">by ${esc(b.author)}</div>
+      <div class="card-meta">
+        <span class="card-genre">${esc(b.genre)}</span>
+        ${starsHTML(b.rating)}
+        ${b.dateRead?`<span class="card-date">📅 ${fmtDate(b.dateRead)}</span>`:''}
+      </div>
+      ${b.notes?`<div class="card-notes">${esc(b.notes)}</div>`:''}
+    </div>
+  `).join('');
 }
 
 function deleteBook(id) {
   books = books.filter(b => b.id !== id);
-  save(); renderBooks(); renderRecs();
+  save('bc_books', books);
+  renderBooks();
+  showToast('Book removed', '🗑️');
 }
 
-function renderBooks() {
-  const q = document.getElementById('b-search').value.toLowerCase();
-  const genre = document.getElementById('b-filter-genre').value;
-  const sort = document.getElementById('b-sort').value;
-  let list = books.filter(b =>
-    (!q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)) &&
-    (!genre || b.genre === genre)
+document.getElementById('bookForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title  = document.getElementById('bookTitle').value.trim();
+  const author = document.getElementById('bookAuthor').value.trim();
+  const genre  = document.getElementById('bookGenre').value;
+  const rating = getStarRating('bookStars');
+  if (!title)  { showToast('Please enter a title','⚠️'); return; }
+  if (!author) { showToast('Please enter an author','⚠️'); return; }
+  if (!genre)  { showToast('Please select a genre','⚠️'); return; }
+  if (!rating) { showToast('Please select a rating','⚠️'); return; }
+
+  const book = {
+    id: uid(), title, author, genre, rating,
+    dateRead: document.getElementById('bookDate').value,
+    notes:    document.getElementById('bookNotes').value.trim(),
+    added:    Date.now(),
+  };
+  books.unshift(book);
+  save('bc_books', books);
+  renderBooks();
+  document.getElementById('bookForm').reset();
+  document.getElementById('bookGenre').value = '';
+  resetStarInput('bookStars');
+  closeForm('bookFormWrapper');
+  showToast(`"${title}" added to your library!`, '📖');
+});
+
+document.getElementById('bookSearch').addEventListener('input', renderBooks);
+document.getElementById('bookFilter').addEventListener('change', renderBooks);
+document.getElementById('bookSort').addEventListener('change', renderBooks);
+
+/* ================================================================
+   MOVIES RENDER
+================================================================ */
+function renderMovies() {
+  const q     = document.getElementById('movieSearch').value.toLowerCase();
+  const genre = document.getElementById('movieFilter').value;
+  const sort  = document.getElementById('movieSort').value;
+
+  let items = movies.filter(m =>
+    (!q || m.title.toLowerCase().includes(q) || m.director.toLowerCase().includes(q)) &&
+    (!genre || m.genre === genre)
   );
-  if (sort === 'rating') list.sort((a,b) => b.rating - a.rating);
-  else if (sort === 'title') list.sort((a,b) => a.title.localeCompare(b.title));
-  document.getElementById('b-count').textContent = `${list.length} book${list.length!==1?'s':''}`;
-  const el = document.getElementById('books-list');
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="grid-column:1/-1"><p>${books.length?'No matches found.':'No books yet!'}</p><small>${books.length?'Try a different search.':'Add your first book above.'}</small></div>`;
+  items = sortItems(items, sort);
+
+  document.getElementById('moviesBadge').textContent = movies.length;
+
+  const st = document.getElementById('moviesStats');
+  if (movies.length) {
+    const genres = [...new Set(movies.map(m=>m.genre))].slice(0,3).join(' · ');
+    st.innerHTML =
+      `<div class="stat-chip">🎬 <strong>${movies.length}</strong> movie${movies.length!==1?'s':''}</div>` +
+      `<div class="stat-chip">⭐ Avg <strong>${avgRating(movies)}</strong></div>` +
+      (genres ? `<div class="stat-chip">🏷️ ${esc(genres)}</div>` : '');
+  } else { st.innerHTML = ''; }
+
+  const grid = document.getElementById('moviesGrid');
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">${movies.length?'🔍':'🎬'}</div>
+      <div class="empty-title">${movies.length?'No results found':'No movies yet'}</div>
+      <div class="empty-desc">${movies.length
+        ?'Try adjusting your search or filter.'
+        :'Add your first movie using the form above and start building your watchlist!'}</div>
+    </div>`;
     return;
   }
-  el.innerHTML = list.map(b => `
-    <div class="item-card">
-      <button class="delete-btn" onclick="deleteBook(${b.id})">✕</button>
-      <div class="title">${esc(b.title)}</div>
-      <div class="creator">${esc(b.author)}</div>
-      <div class="stars">${starsHtml(b.rating)}</div>
-      <div class="meta">
-        ${b.genre ? `<span class="badge">${esc(b.genre)}</span>` : ''}
-        ${b.date ? `<span class="badge">${b.date}</span>` : ''}
-      </div>
-      ${b.notes ? `<div class="notes">${esc(b.notes)}</div>` : ''}
-    </div>`).join('');
-}
 
-// ── Movies ────────────────────────────────────────────────────────────────────
-function addMovie() {
-  const title = document.getElementById('m-title').value.trim();
-  if (!title) { alert('Please enter a title.'); return; }
-  movies.unshift({
-    id: Date.now(), title,
-    director: document.getElementById('m-director').value.trim(),
-    genre: document.getElementById('m-genre').value,
-    date: document.getElementById('m-date').value,
-    rating: getStars('m-stars'),
-    notes: document.getElementById('m-notes').value.trim(),
-  });
-  save();
-  ['m-title','m-director','m-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('m-genre').value = '';
-  document.getElementById('m-date').value = '';
-  resetStars('m-stars');
-  renderMovies();
-  renderRecs();
+  grid.innerHTML = items.map((m,i) => `
+    <div class="item-card" style="animation-delay:${Math.min(i,8)*0.04}s">
+      <div class="card-header">
+        <div class="card-title">${esc(m.title)}</div>
+        <button class="card-delete" onclick="deleteMovie('${m.id}')" aria-label="Delete ${esc(m.title)}">✕</button>
+      </div>
+      <div class="card-creator">dir. ${esc(m.director)}</div>
+      <div class="card-meta">
+        <span class="card-genre">${esc(m.genre)}</span>
+        ${starsHTML(m.rating)}
+        ${m.dateWatched?`<span class="card-date">📅 ${fmtDate(m.dateWatched)}</span>`:''}
+      </div>
+      ${m.notes?`<div class="card-notes">${esc(m.notes)}</div>`:''}
+    </div>
+  `).join('');
 }
 
 function deleteMovie(id) {
   movies = movies.filter(m => m.id !== id);
-  save(); renderMovies(); renderRecs();
+  save('bc_movies', movies);
+  renderMovies();
+  showToast('Movie removed', '🗑️');
 }
 
-function renderMovies() {
-  const q = document.getElementById('m-search').value.toLowerCase();
-  const genre = document.getElementById('m-filter-genre').value;
-  const sort = document.getElementById('m-sort').value;
-  let list = movies.filter(m =>
-    (!q || m.title.toLowerCase().includes(q) || m.director.toLowerCase().includes(q)) &&
-    (!genre || m.genre === genre)
-  );
-  if (sort === 'rating') list.sort((a,b) => b.rating - a.rating);
-  else if (sort === 'title') list.sort((a,b) => a.title.localeCompare(b.title));
-  document.getElementById('m-count').textContent = `${list.length} movie${list.length!==1?'s':''}`;
-  const el = document.getElementById('movies-list');
-  if (!list.length) {
-    el.innerHTML = `<div class="empty" style="grid-column:1/-1"><p>${movies.length?'No matches found.':'No movies yet!'}</p><small>${movies.length?'Try a different search.':'Add your first movie above.'}</small></div>`;
-    return;
-  }
-  el.innerHTML = list.map(m => `
-    <div class="item-card">
-      <button class="delete-btn" onclick="deleteMovie(${m.id})">✕</button>
-      <div class="title">${esc(m.title)}</div>
-      <div class="creator">${esc(m.director)}</div>
-      <div class="stars">${starsHtml(m.rating)}</div>
-      <div class="meta">
-        ${m.genre ? `<span class="badge">${esc(m.genre)}</span>` : ''}
-        ${m.date ? `<span class="badge">${m.date}</span>` : ''}
-      </div>
-      ${m.notes ? `<div class="notes">${esc(m.notes)}</div>` : ''}
-    </div>`).join('');
-}
+document.getElementById('movieForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title    = document.getElementById('movieTitle').value.trim();
+  const director = document.getElementById('movieDirector').value.trim();
+  const genre    = document.getElementById('movieGenre').value;
+  const rating   = getStarRating('movieStars');
+  if (!title)    { showToast('Please enter a title','⚠️'); return; }
+  if (!director) { showToast('Please enter a director','⚠️'); return; }
+  if (!genre)    { showToast('Please select a genre','⚠️'); return; }
+  if (!rating)   { showToast('Please select a rating','⚠️'); return; }
 
-// ── Recommendations ───────────────────────────────────────────────────────────
-const BOOK_DB = [
-  {title:'Dune',creator:'Frank Herbert',genre:'Sci-Fi'},
-  {title:'The Hitchhiker\'s Guide to the Galaxy',creator:'Douglas Adams',genre:'Sci-Fi'},
-  {title:'Ender\'s Game',creator:'Orson Scott Card',genre:'Sci-Fi'},
-  {title:'Foundation',creator:'Isaac Asimov',genre:'Sci-Fi'},
-  {title:'Neuromancer',creator:'William Gibson',genre:'Sci-Fi'},
-  {title:'The Lord of the Rings',creator:'J.R.R. Tolkien',genre:'Fantasy'},
-  {title:'The Name of the Wind',creator:'Patrick Rothfuss',genre:'Fantasy'},
-  {title:'A Wizard of Earthsea',creator:'Ursula K. Le Guin',genre:'Fantasy'},
-  {title:'The Way of Kings',creator:'Brandon Sanderson',genre:'Fantasy'},
-  {title:'American Gods',creator:'Neil Gaiman',genre:'Fantasy'},
-  {title:'Gone Girl',creator:'Gillian Flynn',genre:'Thriller'},
-  {title:'The Girl with the Dragon Tattoo',creator:'Stieg Larsson',genre:'Thriller'},
-  {title:'The Da Vinci Code',creator:'Dan Brown',genre:'Thriller'},
-  {title:'Big Little Lies',creator:'Liane Moriarty',genre:'Thriller'},
-  {title:'And Then There Were None',creator:'Agatha Christie',genre:'Mystery'},
-  {title:'The Curious Incident of the Dog in the Night-Time',creator:'Mark Haddon',genre:'Mystery'},
-  {title:'In the Woods',creator:'Tana French',genre:'Mystery'},
-  {title:'The Shadow of the Wind',creator:'Carlos Ruiz Zafón',genre:'Mystery'},
-  {title:'The Shining',creator:'Stephen King',genre:'Horror'},
-  {title:'It',creator:'Stephen King',genre:'Horror'},
-  {title:'Dracula',creator:'Bram Stoker',genre:'Horror'},
-  {title:'House of Leaves',creator:'Mark Z. Danielewski',genre:'Horror'},
-  {title:'Pride and Prejudice',creator:'Jane Austen',genre:'Romance'},
-  {title:'Outlander',creator:'Diana Gabaldon',genre:'Romance'},
-  {title:'The Notebook',creator:'Nicholas Sparks',genre:'Romance'},
-  {title:'Sapiens',creator:'Yuval Noah Harari',genre:'Non-fiction'},
-  {title:'Educated',creator:'Tara Westover',genre:'Non-fiction'},
-  {title:'The Immortal Life of Henrietta Lacks',creator:'Rebecca Skloot',genre:'Non-fiction'},
-  {title:'Atomic Habits',creator:'James Clear',genre:'Self-Help'},
-  {title:'The Power of Now',creator:'Eckhart Tolle',genre:'Self-Help'},
-  {title:'Thinking, Fast and Slow',creator:'Daniel Kahneman',genre:'Self-Help'},
-  {title:'To Kill a Mockingbird',creator:'Harper Lee',genre:'Literary Fiction'},
-  {title:'1984',creator:'George Orwell',genre:'Fiction'},
-  {title:'Brave New World',creator:'Aldous Huxley',genre:'Fiction'},
-  {title:'The Great Gatsby',creator:'F. Scott Fitzgerald',genre:'Literary Fiction'},
-  {title:'One Hundred Years of Solitude',creator:'Gabriel García Márquez',genre:'Literary Fiction'},
-  {title:'The Alchemist',creator:'Paulo Coelho',genre:'Fiction'},
-  {title:'Becoming',creator:'Michelle Obama',genre:'Biography'},
-  {title:'Steve Jobs',creator:'Walter Isaacson',genre:'Biography'},
-  {title:'The Diary of a Young Girl',creator:'Anne Frank',genre:'Biography'},
-  {title:'Sapiens',creator:'Yuval Noah Harari',genre:'History'},
-  {title:'The Guns of August',creator:'Barbara Tuchman',genre:'History'},
-];
+  const movie = {
+    id: uid(), title, director, genre, rating,
+    dateWatched: document.getElementById('movieDate').value,
+    notes:       document.getElementById('movieNotes').value.trim(),
+    added:       Date.now(),
+  };
+  movies.unshift(movie);
+  save('bc_movies', movies);
+  renderMovies();
+  document.getElementById('movieForm').reset();
+  document.getElementById('movieGenre').value = '';
+  resetStarInput('movieStars');
+  closeForm('movieFormWrapper');
+  showToast(`"${title}" added to your watchlist!`, '🎬');
+});
 
-const MOVIE_DB = [
-  {title:'Interstellar',creator:'Christopher Nolan',genre:'Sci-Fi'},
-  {title:'Blade Runner 2049',creator:'Denis Villeneuve',genre:'Sci-Fi'},
-  {title:'The Matrix',creator:'Wachowskis',genre:'Sci-Fi'},
-  {title:'Arrival',creator:'Denis Villeneuve',genre:'Sci-Fi'},
-  {title:'Ex Machina',creator:'Alex Garland',genre:'Sci-Fi'},
-  {title:'2001: A Space Odyssey',creator:'Stanley Kubrick',genre:'Sci-Fi'},
-  {title:'The Lord of the Rings: Fellowship',creator:'Peter Jackson',genre:'Fantasy'},
-  {title:'Pan\'s Labyrinth',creator:'Guillermo del Toro',genre:'Fantasy'},
-  {title:'The Princess Bride',creator:'Rob Reiner',genre:'Fantasy'},
-  {title:'Inception',creator:'Christopher Nolan',genre:'Thriller'},
-  {title:'Se7en',creator:'David Fincher',genre:'Thriller'},
-  {title:'Parasite',creator:'Bong Joon-ho',genre:'Thriller'},
-  {title:'Gone Girl',creator:'David Fincher',genre:'Thriller'},
-  {title:'Zodiac',creator:'David Fincher',genre:'Mystery'},
-  {title:'Knives Out',creator:'Rian Johnson',genre:'Mystery'},
-  {title:'Rear Window',creator:'Alfred Hitchcock',genre:'Mystery'},
-  {title:'The Usual Suspects',creator:'Bryan Singer',genre:'Mystery'},
-  {title:'Get Out',creator:'Jordan Peele',genre:'Horror'},
-  {title:'Hereditary',creator:'Ari Aster',genre:'Horror'},
-  {title:'The Shining',creator:'Stanley Kubrick',genre:'Horror'},
-  {title:'Midsommar',creator:'Ari Aster',genre:'Horror'},
-  {title:'The Dark Knight',creator:'Christopher Nolan',genre:'Action'},
-  {title:'Mad Max: Fury Road',creator:'George Miller',genre:'Action'},
-  {title:'John Wick',creator:'Chad Stahelski',genre:'Action'},
-  {title:'Avengers: Infinity War',creator:'Russo Brothers',genre:'Action'},
-  {title:'The Grand Budapest Hotel',creator:'Wes Anderson',genre:'Comedy'},
-  {title:'Superbad',creator:'Greg Mottola',genre:'Comedy'},
-  {title:'What We Do in the Shadows',creator:'Taika Waititi',genre:'Comedy'},
-  {title:'The Shawshank Redemption',creator:'Frank Darabont',genre:'Drama'},
-  {title:'Schindler\'s List',creator:'Steven Spielberg',genre:'Drama'},
-  {title:'Whiplash',creator:'Damien Chazelle',genre:'Drama'},
-  {title:'12 Angry Men',creator:'Sidney Lumet',genre:'Drama'},
-  {title:'Portrait of a Lady on Fire',creator:'Céline Sciamma',genre:'Romance'},
-  {title:'Before Sunrise',creator:'Richard Linklater',genre:'Romance'},
-  {title:'Eternal Sunshine of the Spotless Mind',creator:'Michel Gondry',genre:'Romance'},
-  {title:'Up',creator:'Pete Docter',genre:'Animation'},
-  {title:'Spirited Away',creator:'Hayao Miyazaki',genre:'Animation'},
-  {title:'Into the Spider-Verse',creator:'Bob Persichetti',genre:'Animation'},
-  {title:'Free Solo',creator:'Jimmy Chin',genre:'Documentary'},
-  {title:'Won\'t You Be My Neighbor?',creator:'Morgan Neville',genre:'Documentary'},
-  {title:'13th',creator:'Ava DuVernay',genre:'Documentary'},
-  {title:'The Godfather',creator:'Francis Ford Coppola',genre:'Crime'},
-  {title:'Goodfellas',creator:'Martin Scorsese',genre:'Crime'},
-  {title:'Pulp Fiction',creator:'Quentin Tarantino',genre:'Crime'},
-];
+document.getElementById('movieSearch').addEventListener('input', renderMovies);
+document.getElementById('movieFilter').addEventListener('change', renderMovies);
+document.getElementById('movieSort').addEventListener('change', renderMovies);
 
-function getFavoriteGenres(items) {
-  const counts = {};
-  items.filter(i => i.rating >= 4).forEach(i => {
-    if (i.genre) counts[i.genre] = (counts[i.genre] || 0) + i.rating;
+/* ================================================================
+   RECOMMENDATIONS ENGINE
+================================================================ */
+function topGenres(items, minRating) {
+  minRating = minRating || 4;
+  const scores = {};
+  items.filter(x => x.rating >= minRating).forEach(x => {
+    scores[x.genre] = (scores[x.genre] || 0) + x.rating;
   });
-  return Object.entries(counts).sort((a,b) => b[1]-a[1]).map(e => e[0]);
+  return Object.entries(scores).sort((a,b) => b[1]-a[1]).map(e => e[0]);
+}
+
+function buildRecs(items, catalog, maxTotal) {
+  maxTotal = maxTotal || 9;
+  const genres = topGenres(items, 4);
+  if (!genres.length) return null;
+  const owned = new Set(items.map(x => x.title.toLowerCase().trim()));
+  const results = [];
+  for (const g of genres) {
+    if (!catalog[g]) continue;
+    // Shuffle lightly so repeated visits show variety
+    const pool = catalog[g].filter(r => !owned.has(r.title.toLowerCase().trim()));
+    const shuffled = pool.sort(() => Math.random() - 0.45);
+    const picks = shuffled.slice(0, 3);
+    picks.forEach(p => results.push({...p, genre:g, reason:`Because you love ${g}`}));
+    if (results.length >= maxTotal) break;
+  }
+  return results.slice(0, maxTotal);
 }
 
 function renderRecs() {
-  const bookGenres = getFavoriteGenres(books);
-  const movieGenres = getFavoriteGenres(movies);
-  const myBookTitles = new Set(books.map(b => b.title.toLowerCase()));
-  const myMovieTitles = new Set(movies.map(m => m.title.toLowerCase()));
+  const container = document.getElementById('recsContent');
+  const bookRecs  = buildRecs(books, BOOK_RECS);
+  const movieRecs = buildRecs(movies, MOVIE_RECS);
 
-  // Book recs
-  const bookEl = document.getElementById('book-recs');
-  if (!bookGenres.length) {
-    bookEl.innerHTML = `<div class="rec-empty">Rate some books 4+ stars and we'll recommend similar ones!</div>`;
-  } else {
-    const recs = [];
-    for (const genre of bookGenres) {
-      BOOK_DB.filter(b => b.genre === genre && !myBookTitles.has(b.title.toLowerCase()))
-        .forEach(b => { if (!recs.find(r => r.title === b.title)) recs.push({...b, reason: `Because you love ${genre}`}); });
-    }
-    if (!recs.length) {
-      bookEl.innerHTML = `<div class="rec-empty">You've read everything we'd recommend in your favorite genres — impressive!</div>`;
-    } else {
-      bookEl.innerHTML = `<div class="rec-grid">${recs.slice(0,9).map(r => `
-        <div class="rec-card">
-          <div class="rec-title">${esc(r.title)}</div>
-          <div class="rec-creator">${esc(r.creator)}</div>
-          <div class="meta"><span class="badge">${esc(r.genre)}</span></div>
-          <div class="rec-reason">✦ ${esc(r.reason)}</div>
-        </div>`).join('')}</div>`;
-    }
+  if (!bookRecs && !movieRecs) {
+    const hasAny = books.length || movies.length;
+    container.innerHTML = `<div class="no-recs">
+      <div style="font-size:52px;margin-bottom:16px">${hasAny?'⭐':'📋'}</div>
+      <div style="font-size:17px;font-weight:600;color:var(--text-secondary);margin-bottom:10px">
+        ${hasAny?'Rate items 4 stars or higher to unlock recommendations':'Your library is empty'}
+      </div>
+      <div>${hasAny
+        ?'Add ratings of ★★★★ or ★★★★★ to your books and movies — we\'ll surface similar titles from our curated catalogue.'
+        :'Head to the Books or Movies tabs and start adding titles. Once you\'ve rated a few with 4+ stars, personalised recommendations will appear here.'}</div>
+    </div>`;
+    return;
   }
 
-  // Movie recs
-  const movieEl = document.getElementById('movie-recs');
-  if (!movieGenres.length) {
-    movieEl.innerHTML = `<div class="rec-empty">Rate some movies 4+ stars and we'll recommend similar ones!</div>`;
-  } else {
-    const recs = [];
-    for (const genre of movieGenres) {
-      MOVIE_DB.filter(m => m.genre === genre && !myMovieTitles.has(m.title.toLowerCase()))
-        .forEach(m => { if (!recs.find(r => r.title === m.title)) recs.push({...m, reason: `Because you love ${genre}`}); });
+  function recSection(title, recs, showEmpty, emptyMsg) {
+    if (!recs || !recs.length) {
+      if (!showEmpty) return '';
+      return `<div class="recs-section">
+        <div class="recs-section-title">${title}</div>
+        <div class="no-recs" style="padding:22px">${emptyMsg}</div>
+      </div>`;
     }
-    if (!recs.length) {
-      movieEl.innerHTML = `<div class="rec-empty">You've watched everything we'd recommend in your favorite genres!</div>`;
-    } else {
-      movieEl.innerHTML = `<div class="rec-grid">${recs.slice(0,9).map(r => `
-        <div class="rec-card">
-          <div class="rec-title">${esc(r.title)}</div>
-          <div class="rec-creator">${esc(r.creator)}</div>
-          <div class="meta"><span class="badge">${esc(r.genre)}</span></div>
-          <div class="rec-reason">✦ ${esc(r.reason)}</div>
-        </div>`).join('')}</div>`;
-    }
+    return `<div class="recs-section">
+      <div class="recs-section-title">${title}</div>
+      <div class="rec-cards">
+        ${recs.map((r,i) => `
+          <div class="rec-card" style="animation-delay:${i*0.05}s">
+            <div class="rec-title">${esc(r.title)}</div>
+            <div class="rec-creator">${esc(r.creator)}</div>
+            <span class="rec-genre-tag">${esc(r.genre)}</span>
+            <div class="rec-reason">💡 ${esc(r.reason)}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
   }
+
+  container.innerHTML =
+    recSection('📖 Book Recommendations', bookRecs, !!books.length, 'Rate some books ★★★★ or higher to get book recommendations.') +
+    recSection('🎬 Movie Recommendations', movieRecs, !!movies.length, 'Rate some movies ★★★★ or higher to get movie recommendations.');
 }
 
-// ── UI helpers ────────────────────────────────────────────────────────────────
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  btn.classList.add('active');
-  if (name === 'recs') renderRecs();
-}
-
-function toggleDark() {
-  dark = !dark;
-  document.body.classList.toggle('dark', dark);
-  localStorage.setItem('darkmode', JSON.stringify(dark));
-  document.querySelector('.dark-toggle').textContent = dark ? '☀️ Light' : '🌙 Dark';
-}
-
-if (dark) document.querySelector('.dark-toggle').textContent = '☀️ Light';
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-renderBooks();
-renderMovies();
+/* ================================================================
+   INIT
+================================================================ */
+(function init() {
+  loadAll();
+  applyTheme();
+  initStarInput('bookStars');
+  initStarInput('movieStars');
+  // Default dates to today
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('bookDate').value  = today;
+  document.getElementById('movieDate').value = today;
+  renderBooks();
+  renderMovies();
+})();
 </script>
 </body>
 </html>
